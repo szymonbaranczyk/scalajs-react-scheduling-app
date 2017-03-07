@@ -1,0 +1,18 @@
+.day {
+    padding: 5px;
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.inactive {
+    color: grey;
+    border: 1px solid grey;
+}
+
+.today {
+    font-weight: bold;
+}
+
+.selected {
+    background: green;
+}
