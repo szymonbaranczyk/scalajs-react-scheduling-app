@@ -3,8 +3,9 @@
 # ~~~~
 
 # Home page
-GET     /                    scheduler.controllers.Application.index
+GET        /                    scheduler.controllers.Application.index
+GET        /meetings            scheduler.controllers.Application.listMeetings
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file        controllers.Assets.versioned(path="/public", file)
+GET        /assets/*file        controllers.Assets.versioned(path="/public", file)
 
     

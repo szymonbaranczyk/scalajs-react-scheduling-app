@@ -43,7 +43,8 @@ lazy val `client` = (project in file ("client")).settings(
     "com.lihaoyi" %%% "upickle" % "0.4.3",
     "com.github.japgolly.scalajs-react" %%% "core" % "0.11.3",
     "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
-    "ru.pavkin" %%% "scala-js-momentjs" % "0.5.1"
+    "ru.pavkin" %%% "scala-js-momentjs" % "0.5.1",
+    "be.doeraene" %%% "scalajs-jquery" % "0.9.1"
   ),
   jsDependencies ++= Seq(
 //    "org.webjars.bower" % "moment" % "2.17.1"
@@ -65,7 +66,8 @@ lazy val `client` = (project in file ("client")).settings(
       /         "react-dom-server.js"
       minified  "react-dom-server.min.js"
       dependsOn "react-dom.js"
-      commonJSName "ReactDOMServer")
+      commonJSName "ReactDOMServer",
+    "org.webjars" % "jquery" % "2.1.3" / "2.1.3/jquery.js")
 ).enablePlugins(ScalaJSPlugin, ScalaJSWeb).
   dependsOn(sharedJs)
 

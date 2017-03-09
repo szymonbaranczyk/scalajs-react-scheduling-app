@@ -5,15 +5,17 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.prefix_<^._
 import moment._
 import org.scalajs.dom._
+import org.scalajs.dom.ext.Ajax
+import upickle.default._
 
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExport
-
 /**
   * Created by Szymon Barańczyk on 2017-02-13.
   */
-
+case class MomentMeeting(id: Int, date: Date, isTaken: Boolean)
 @JSExport
 object ScalaJSApp extends js.JSApp {
 
@@ -23,6 +25,7 @@ object ScalaJSApp extends js.JSApp {
     case class Props(today: Date, available: List[Date])
     case class DayProps(day: Date, backend: BackendCalendar, isToday: Boolean, isSelected: Boolean, isThisMonth: Boolean, isMeeting: Boolean, isInPast: Boolean)
     case class WeekProps(date: Date, backend: BackendCalendar, viewed: Date, selected: Option[Date], today: Date, available: List[Date])
+
     val Day = ReactComponentB[DayProps]("Day")
       .render_P(p => {
         val onClick = if (p.isThisMonth) p.backend.select(p.day)(_) else (e: ReactEvent) => Callback {}
@@ -100,6 +103,9 @@ object ScalaJSApp extends js.JSApp {
       .initialState(State(Moment(today), None))
       .renderBackend[BackendCalendar]
       .build
+    Ajax.get("/meetings").onSuccess { case xhr =>
+      console.log(read[Seq[(Int, Int, Boolean)]](xhr.responseText).map(t => MomentMeeting(t._1, Moment(t._2), t._3)))
+    }
     ReactDOM.render(Calendar(Props(today, List[Date]())), document.getElementById("here"))
   }
 

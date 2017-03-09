@@ -1,16 +1,29 @@
 package scheduler.controllers
 
+import java.util.Date
 import javax.inject.Inject
 
+import play.api.libs.json.Json
 import play.api.mvc._
-import upickle.default._
+import scheduler.helpers.JsonParser
+import shared.domain.Meeting
 /**
   * Created by Szymon Barańczyk on 2017-02-13.
   */
-class Application @Inject() extends Controller {
+class Application @Inject() extends Controller with JsonParser {
 
   def index = Action {
     Ok(scheduler.views.html.index("Nothing for now"))
   }
 
+  def listMeetings = Action {
+    val meeting1 = Meeting(1, new Date(), false)
+    val date = new Date()
+    date.setDate(date.getDate + 1)
+    val date2 = new Date()
+    date2.setDate(date.getDate + 4)
+    val meetings = List(Meeting(1, new Date(), false), Meeting(1, date, false), Meeting(1, date2, true))
+    val json = Json.toJson(meetings)
+    Ok(json)
+  }
 }
