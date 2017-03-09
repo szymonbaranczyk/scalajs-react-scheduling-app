@@ -1,6 +1,5 @@
 package main
 
-
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.component.Scala
 import japgolly.scalajs.react.vdom.html_<^._
@@ -25,14 +24,16 @@ object ScalaJSApp extends js.JSApp {
 
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
-    case class State(viewed: Date, selected: Option[Date])
-    case class Props(today: Date, available: Seq[MomentMeeting])
-    case class DayProps(day: Date, backend: BackendCalendar, isToday: Boolean, isSelected: Boolean, isThisMonth: Boolean, isMeeting: Boolean, isInPast: Boolean)
-    case class WeekProps(date: Date, backend: BackendCalendar, viewed: Date, selected: Option[Date], today: Date, available: Seq[Date])
+    case class SchedulerProps(today: Date)
+    case class SchedulerState(available: Seq[MomentMeeting], selected: Option[Date])
+    case class CalendarState(viewed: Date)
+    case class CalendarProps(today: Date, available: Seq[MomentMeeting], selected: Option[Date], backendScheduler: BackendScheduler)
+    case class DayProps(day: Date, backendScheduler: BackendScheduler, isToday: Boolean, isSelected: Boolean, isThisMonth: Boolean, isMeeting: Boolean, isInPast: Boolean)
+    case class WeekProps(date: Date, backendScheduler: BackendScheduler, viewed: Date, selected: Option[Date], today: Date, available: Seq[Date])
 
     val Day = ScalaComponent.build[DayProps]("Day")
       .render_P(p => {
-        val onClick = if (p.isThisMonth && !p.isInPast && p.isMeeting) p.backend.select(p.day)(_) else (e: ReactEvent) => Callback {}
+        val onClick = if (p.isThisMonth && !p.isInPast && p.isMeeting) p.backendScheduler.select(p.day)(_) else (e: ReactEvent) => Callback {}
         val `class` = "day" + (if (!p.isThisMonth || p.isInPast) " inactive" else "") +
           (if (p.isSelected) " selected" else "") +
           (if (p.isMeeting) " meeting" else "") +
@@ -59,7 +60,7 @@ object ScalaJSApp extends js.JSApp {
         val dateIter = Moment(p.date)
         val days = (0 to 6).map(_ => {
           val matchedMeeting: Option[Date] = p.available.find(d => d.isSame(dateIter, "day"))
-          val tag = Day(DayProps(Moment(dateIter), p.backend,
+          val tag = Day(DayProps(Moment(dateIter), p.backendScheduler,
             isToday = dateIter.isSame(p.today, "day"),
             isSelected = p.selected match {
               case Some(date) => date.isSame(dateIter, "day")
@@ -76,52 +77,65 @@ object ScalaJSApp extends js.JSApp {
         })
         <.tr(days.toVdomArray)
       }).build
-    class BackendCalendar($: BackendScope[Props, State]) {
-      def select(d: Date)(e: ReactEvent): Callback = {
-        console.log("clicked " + d.format("DD-MM-YYYY"))
-        $.modState(state => State(state.viewed, Some(d)))
-      }
+    class BackendCalendar($: BackendScope[CalendarProps, CalendarState]) {
+
 
       def prev(e: ReactEvent): Callback = {
         console.log("prev")
-        $.modState(state => State(state.viewed.add(-1, "month"), state.selected))
+        $.modState(state => CalendarState(state.viewed.add(-1, "month")))
       }
 
       def next(e: ReactEvent): Callback = {
         console.log("next")
-        $.modState(state => State(state.viewed.add(1, "month"), state.selected))
+        $.modState(state => CalendarState(state.viewed.add(1, "month")))
       }
 
-      def render(props: Props, state: State) = {
+      def render(props: CalendarProps, state: CalendarState) = {
         val startOfTheMonth = Moment(state.viewed).startOf("month")
         val startOfTheWeek = Moment(startOfTheMonth).startOf("week")
         val uniqueMeetingDays = props.available.map(m => m.date.format("YYYYMMDD")).distinct.map(s => Moment(s))
         val weeks = ListBuffer[Scala.Unmounted[WeekProps, Unit, Unit]]()
         while (startOfTheWeek.month() != state.viewed.month() + 1) {
-          weeks += Week(WeekProps(Moment(startOfTheWeek), this, Moment(state.viewed), state.selected, props.today, uniqueMeetingDays))
+          weeks += Week(WeekProps(Moment(startOfTheWeek), props.backendScheduler, Moment(state.viewed), props.selected, props.today, uniqueMeetingDays))
           startOfTheWeek.add(1, "week")
         }
-        //        val p = CSSTransitionGroupProps()
-        //        p.transitionName = "scheduler"
-        //        p.transitionEnterTimeout = 1000
-        //        p.transitionLeaveTimeout = 1000
-        //        CSSTransitionGroup(
+        //              //TransitionGroup won't work, as one item has to fade out BEFORE second one will fade in.
+        //                val p = CSSTransitionGroupProps()
+        //                p.transitionName = "scheduler"
+        //                p.transitionEnterTimeout = 1000
+        //                p.transitionLeaveTimeout = 1000
+        //                CSSTransitionGroup(p)(
         <.table(<.tbody(MonthTab((Moment(startOfTheMonth), this)), weeks.toVdomArray))
-        //       )
+        //                )
       }
     }
     val today: Date = Moment()
-    val Calendar = ScalaComponent.build[Props]("Calendar")
-      .initialState(State(Moment(today), None))
+    val Calendar = ScalaComponent.build[CalendarProps]("Calendar")
+      .initialState(CalendarState(Moment(today)))
       .renderBackend[BackendCalendar]
       .build
+    class BackendScheduler($: BackendScope[SchedulerProps, SchedulerState]) {
+      def select(d: Date)(e: ReactEvent): Callback = {
+        console.log("clicked " + d.format("DD-MM-YYYY"))
+        $.modState(state => SchedulerState(state.available, Some(d)))
+      }
+
+      def render(props: SchedulerProps, state: SchedulerState) = {
+        <.div(Calendar(CalendarProps(props.today, state.available, state.selected, this)))
+      }
+    }
+
+
     Ajax.get("/meetings").onSuccess { case xhr =>
       val moments = read[Seq[ParsedMeeting]](xhr.responseText).map(t => {
         println(t.date)
         MomentMeeting(t.id, Moment(t.date), t.isTaken)
       })
-
-      Calendar(Props(today, moments)).renderIntoDOM(document.getElementById("here"))
+      val Scheduler = ScalaComponent.build[SchedulerProps]("Scheduler")
+        .initialState(SchedulerState(moments, None))
+        .renderBackend[BackendScheduler]
+        .build
+      Scheduler(SchedulerProps(today)).renderIntoDOM(document.getElementById("here"))
       console.log("jej")
     }
   }
