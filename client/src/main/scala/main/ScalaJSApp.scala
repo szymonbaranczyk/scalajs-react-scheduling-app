@@ -2,13 +2,14 @@ package main
 
 
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.component.Scala
 import japgolly.scalajs.react.vdom.html_<^._
 import moment._
 import org.scalajs.dom._
 import org.scalajs.dom.ext.Ajax
 import upickle.default._
-import japgolly.scalajs.react.ReactAddons
 
+import scala.collection.immutable.Seq
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
@@ -73,7 +74,7 @@ object ScalaJSApp extends js.JSApp {
           dateIter.add(1, "day")
           tag
         })
-        <.tr(days)
+        <.tr(days.toVdomArray)
       }).build
     class BackendCalendar($: BackendScope[Props, State]) {
       def select(d: Date)(e: ReactEvent): Callback = {
@@ -95,7 +96,7 @@ object ScalaJSApp extends js.JSApp {
         val startOfTheMonth = Moment(state.viewed).startOf("month")
         val startOfTheWeek = Moment(startOfTheMonth).startOf("week")
         val uniqueMeetingDays = props.available.map(m => m.date.format("YYYYMMDD")).distinct.map(s => Moment(s))
-        val weeks = ListBuffer[TagMod]()
+        val weeks = ListBuffer[Scala.Unmounted[WeekProps, Unit, Unit]]()
         while (startOfTheWeek.month() != state.viewed.month() + 1) {
           weeks += Week(WeekProps(Moment(startOfTheWeek), this, Moment(state.viewed), state.selected, props.today, uniqueMeetingDays))
           startOfTheWeek.add(1, "week")
@@ -105,8 +106,7 @@ object ScalaJSApp extends js.JSApp {
         //        p.transitionEnterTimeout = 1000
         //        p.transitionLeaveTimeout = 1000
         //        CSSTransitionGroup(
-        <.table(<.tbody(MonthTab((Moment(startOfTheMonth), this)),
-          weeks))
+        <.table(<.tbody(MonthTab((Moment(startOfTheMonth), this)), weeks.toVdomArray))
         //       )
       }
     }
@@ -120,7 +120,8 @@ object ScalaJSApp extends js.JSApp {
         println(t.date)
         MomentMeeting(t.id, Moment(t.date), t.isTaken)
       })
-      ReactDOM.render(Calendar(Props(today, moments)), document.getElementById("here"))
+
+      Calendar(Props(today, moments)).renderIntoDOM(document.getElementById("here"))
       console.log("jej")
     }
   }
