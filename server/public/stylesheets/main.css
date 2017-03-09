@@ -1,5 +1,9 @@
+table {
+    border-collapse: collapse;
+}
+
 .day {
-    padding: 5px;
+    padding: 50px;
     border: 1px solid black;
     border-collapse: collapse;
 }
@@ -13,6 +17,28 @@
     font-weight: bold;
 }
 
+.meeting {
+    background: blue;
+}
+
 .selected {
     background: green;
+}
+
+.scheduler-enter {
+    opacity: 0.01;
+}
+
+.scheduler-enter.scheduler-enter-active {
+    opacity: 1;
+    transition: opacity 500ms ease-in;
+}
+
+.scheduler-leave {
+    opacity: 1;
+}
+
+.scheduler-leave.scheduler-leave-active {
+    opacity: 0.01;
+    transition: opacity 300ms ease-in;
 }

@@ -7,6 +7,7 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import scheduler.helpers.JsonParser
 import shared.domain.Meeting
+import upickle.default._
 /**
   * Created by Szymon Barańczyk on 2017-02-13.
   */
@@ -17,13 +18,12 @@ class Application @Inject() extends Controller with JsonParser {
   }
 
   def listMeetings = Action {
-    val meeting1 = Meeting(1, new Date(), false)
     val date = new Date()
     date.setDate(date.getDate + 1)
     val date2 = new Date()
     date2.setDate(date.getDate + 4)
     val meetings = List(Meeting(1, new Date(), false), Meeting(1, date, false), Meeting(1, date2, true))
-    val json = Json.toJson(meetings)
+    val json = write(meetings)
     Ok(json)
   }
 }

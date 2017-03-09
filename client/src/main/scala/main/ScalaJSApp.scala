@@ -2,11 +2,12 @@ package main
 
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react.vdom.html_<^._
 import moment._
 import org.scalajs.dom._
 import org.scalajs.dom.ext.Ajax
 import upickle.default._
+import japgolly.scalajs.react.ReactAddons
 
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -17,23 +18,25 @@ import scala.scalajs.js.annotation.JSExport
   */
 case class MomentMeeting(id: Int, date: Date, isTaken: Boolean)
 
-case class ParsedMeeting(id: Int, date: Int, isTaken: Boolean)
+case class ParsedMeeting(id: Int, date: Long, isTaken: Boolean)
 @JSExport
 object ScalaJSApp extends js.JSApp {
 
   @scala.scalajs.js.annotation.JSExport
   override def main(): Unit = {
     case class State(viewed: Date, selected: Option[Date])
-    case class Props(today: Date, available: List[Date])
+    case class Props(today: Date, available: Seq[MomentMeeting])
     case class DayProps(day: Date, backend: BackendCalendar, isToday: Boolean, isSelected: Boolean, isThisMonth: Boolean, isMeeting: Boolean, isInPast: Boolean)
-    case class WeekProps(date: Date, backend: BackendCalendar, viewed: Date, selected: Option[Date], today: Date, available: List[Date])
+    case class WeekProps(date: Date, backend: BackendCalendar, viewed: Date, selected: Option[Date], today: Date, available: Seq[Date])
 
-    val Day = ReactComponentB[DayProps]("Day")
+    val Day = ScalaComponent.build[DayProps]("Day")
       .render_P(p => {
-        val onClick = if (p.isThisMonth) p.backend.select(p.day)(_) else (e: ReactEvent) => Callback {}
-        val `class` = "day" + (if (!p.isThisMonth || p.isInPast) " inactive " else "") +
-          (if (p.isSelected) " selected " else "") +
-          (if (p.isToday) " today " else "")
+        val onClick = if (p.isThisMonth && !p.isInPast && p.isMeeting) p.backend.select(p.day)(_) else (e: ReactEvent) => Callback {}
+        val `class` = "day" + (if (!p.isThisMonth || p.isInPast) " inactive" else "") +
+          (if (p.isSelected) " selected" else "") +
+          (if (p.isMeeting) " meeting" else "") +
+          (if (p.isToday) " today" else "")
+
         <.td(
           p.day.format("D"),
           ^.onClick ==> onClick,
@@ -41,7 +44,7 @@ object ScalaJSApp extends js.JSApp {
         )
       })
       .build
-    val MonthTab = ReactComponentB[(Date, BackendCalendar)]("MonthTab")
+    val MonthTab = ScalaComponent.build[(Date, BackendCalendar)]("MonthTab")
       .render_P { case (d, b) => <.tr(
         <.th(^.colSpan := 7,
           <.span("<", ^.onClick ==> b.prev),
@@ -50,11 +53,11 @@ object ScalaJSApp extends js.JSApp {
         ))
       }
       .build
-    val Week = ReactComponentB[WeekProps]("Week")
+    val Week = ScalaComponent.build[WeekProps]("Week")
       .render_P(p => {
         val dateIter = Moment(p.date)
-        val matchedMeeting: Option[Date] = p.available.find(d => d.isSame(p.date, "day"))
         val days = (0 to 6).map(_ => {
+          val matchedMeeting: Option[Date] = p.available.find(d => d.isSame(dateIter, "day"))
           val tag = Day(DayProps(Moment(dateIter), p.backend,
             isToday = dateIter.isSame(p.today, "day"),
             isSelected = p.selected match {
@@ -91,27 +94,37 @@ object ScalaJSApp extends js.JSApp {
       def render(props: Props, state: State) = {
         val startOfTheMonth = Moment(state.viewed).startOf("month")
         val startOfTheWeek = Moment(startOfTheMonth).startOf("week")
+        val uniqueMeetingDays = props.available.map(m => m.date.format("YYYYMMDD")).distinct.map(s => Moment(s))
         val weeks = ListBuffer[TagMod]()
         while (startOfTheWeek.month() != state.viewed.month() + 1) {
-          weeks += Week(WeekProps(Moment(startOfTheWeek), this, Moment(state.viewed), state.selected, props.today, props.available))
+          weeks += Week(WeekProps(Moment(startOfTheWeek), this, Moment(state.viewed), state.selected, props.today, uniqueMeetingDays))
           startOfTheWeek.add(1, "week")
         }
+        //        val p = CSSTransitionGroupProps()
+        //        p.transitionName = "scheduler"
+        //        p.transitionEnterTimeout = 1000
+        //        p.transitionLeaveTimeout = 1000
+        //        CSSTransitionGroup(
         <.table(<.tbody(MonthTab((Moment(startOfTheMonth), this)),
           weeks))
+        //       )
       }
     }
     val today: Date = Moment()
-    val Calendar = ReactComponentB[Props]("Calendar")
+    val Calendar = ScalaComponent.build[Props]("Calendar")
       .initialState(State(Moment(today), None))
       .renderBackend[BackendCalendar]
       .build
     Ajax.get("/meetings").onSuccess { case xhr =>
-      val moments = read[Seq[ParsedMeeting]](xhr.responseText).map(t => MomentMeeting(t.id, Moment(t.date), t.isTaken))
+      val moments = read[Seq[ParsedMeeting]](xhr.responseText).map(t => {
+        println(t.date)
+        MomentMeeting(t.id, Moment(t.date), t.isTaken)
+      })
+      ReactDOM.render(Calendar(Props(today, moments)), document.getElementById("here"))
       console.log("jej")
     }
-    ReactDOM.render(Calendar(Props(today, List[Date]())), document.getElementById("here"))
   }
-
 }
+
 
 

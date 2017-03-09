@@ -41,7 +41,7 @@ lazy val `client` = (project in file ("client")).settings(
   persistLauncher := true,
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "upickle" % "0.4.3",
-    "com.github.japgolly.scalajs-react" %%% "core" % "0.11.3",
+    "com.github.japgolly.scalajs-react" %%% "core" % "1.0.0-RC1",
     "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
     "ru.pavkin" %%% "scala-js-momentjs" % "0.5.1",
     "be.doeraene" %%% "scalajs-jquery" % "0.9.1"
@@ -51,18 +51,18 @@ lazy val `client` = (project in file ("client")).settings(
 //      /        "moment.js"
 //      minified "moment.min.js"
 //      commonJSName "Moment",
-    "org.webjars.bower" % "react" % "15.3.2"
+    "org.webjars.bower" % "react" % "15.4.2"
       /        "react-with-addons.js"
       minified "react-with-addons.min.js"
       commonJSName "React",
 
-    "org.webjars.bower" % "react" % "15.3.2"
+    "org.webjars.bower" % "react" % "15.4.2"
       /         "react-dom.js"
       minified  "react-dom.min.js"
       dependsOn "react-with-addons.js"
       commonJSName "ReactDOM",
 
-    "org.webjars.bower" % "react" % "15.3.2"
+    "org.webjars.bower" % "react" % "15.4.2"
       /         "react-dom-server.js"
       minified  "react-dom-server.min.js"
       dependsOn "react-dom.js"
