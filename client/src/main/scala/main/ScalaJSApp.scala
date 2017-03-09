@@ -16,6 +16,8 @@ import scala.scalajs.js.annotation.JSExport
   * Created by Szymon Barańczyk on 2017-02-13.
   */
 case class MomentMeeting(id: Int, date: Date, isTaken: Boolean)
+
+case class ParsedMeeting(id: Int, date: Int, isTaken: Boolean)
 @JSExport
 object ScalaJSApp extends js.JSApp {
 
@@ -104,7 +106,8 @@ object ScalaJSApp extends js.JSApp {
       .renderBackend[BackendCalendar]
       .build
     Ajax.get("/meetings").onSuccess { case xhr =>
-      console.log(read[Seq[(Int, Int, Boolean)]](xhr.responseText).map(t => MomentMeeting(t._1, Moment(t._2), t._3)))
+      val moments = read[Seq[ParsedMeeting]](xhr.responseText).map(t => MomentMeeting(t.id, Moment(t.date), t.isTaken))
+      console.log("jej")
     }
     ReactDOM.render(Calendar(Props(today, List[Date]())), document.getElementById("here"))
   }
