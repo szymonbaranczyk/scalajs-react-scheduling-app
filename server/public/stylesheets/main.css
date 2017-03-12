@@ -1,9 +1,23 @@
 table {
-    border-collapse: collapse;
+    width: 100%;
+    background-color: rgb(206, 224, 255);
+}
+
+.row {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.row > [class*='col-'] {
+    display: flex;
+    flex-direction: column;
 }
 
 .day {
-    padding: 50px;
+    padding: 10px;
     border: 1px solid black;
     border-collapse: collapse;
 }
@@ -21,8 +35,12 @@ table {
     background: blue;
 }
 
-.selected {
+.selected-date {
     background: green;
+}
+
+.occupied {
+    background: red;
 }
 
 .scheduler-enter {
@@ -31,7 +49,19 @@ table {
 
 .scheduler-enter.scheduler-enter-active {
     opacity: 1;
-    transition: opacity 500ms ease-in;
+    transition: opacity 50000ms ease-in;
+}
+
+.min {
+    opacity: 0;
+    background: grey;
+    transition: opacity 50000ms ease-in;
+}
+
+.max {
+    opacity: 1;
+    background: grey;
+    transition: opacity 50000ms ease-in;
 }
 
 .scheduler-leave {
@@ -40,5 +70,48 @@ table {
 
 .scheduler-leave.scheduler-leave-active {
     opacity: 0.01;
-    transition: opacity 300ms ease-in;
+    transition: opacity 50000ms ease-in;
+}
+
+.left-arrow {
+    float: left;
+}
+
+.right-arrow {
+    float: right;
+}
+
+.month-name {
+    margin: 0 auto;
+}
+
+.month-tab {
+    text-align: center;
+}
+
+.time-container {
+    height: 100%;
+}
+
+.time {
+    text-align: center;
+    line-height: 50px;
+    background-color: rgb(84, 149, 255);
+    color: white;
+}
+
+.second-container {
+    max-height: 250px;
+    transition: max-height 0.5s ease-in;
+    background-color: rgb(33, 64, 114);
+    overflow: hidden;
+}
+
+.second-container-transition {
+    max-height: 0;
+    transition: max-height 0.5s ease-in;
+}
+
+.row {
+    background-color: rgb(26, 40, 63);
 }

@@ -44,7 +44,8 @@ lazy val `client` = (project in file ("client")).settings(
     "com.github.japgolly.scalajs-react" %%% "core" % "1.0.0-RC1",
     "org.scalatest" %%% "scalatest" % "3.0.1" % "test",
     "ru.pavkin" %%% "scala-js-momentjs" % "0.5.1",
-    "be.doeraene" %%% "scalajs-jquery" % "0.9.1"
+    "be.doeraene" %%% "scalajs-jquery" % "0.9.1",
+    "com.github.karasiq" %%% "scalajs-bootstrap" % "1.1.4"
   ),
   jsDependencies ++= Seq(
 //    "org.webjars.bower" % "moment" % "2.17.1"
